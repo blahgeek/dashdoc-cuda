@@ -67,6 +67,7 @@ def make_docset_layout(path):
     doc_dir = os.path.join(path, 'Contents/Resources/Documents')
     os.makedirs(doc_dir)
     shutil.copy(os.path.join(os.path.dirname(__file__), 'icon.png'), path)
+    shutil.copy(os.path.join(os.path.dirname(__file__), 'icon@2x.png'), path)
     with open(os.path.join(path, 'Contents/Info.plist'), 'w') as plist:
         plist.write('''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
