@@ -7,6 +7,7 @@
 # @Last modified time: 2017-02-13
 
 
+import re
 import os
 import sqlite3
 import logging
@@ -131,6 +132,8 @@ if __name__ == '__main__':
                 shutil.copy(filepath, dstpath)
 
             for name, typ, pos in indexs:
+                name = re.sub('\s+', ' ', name)
+                assert '\n' not in name
                 if '#' in pos[1:] or '/' in pos:
                     continue
                 # print(name, typ, pos)
