@@ -26,6 +26,8 @@ def remove_navbar(soup):
 
 def extract_sectionlink(soup):
     for link in soup.find_all('div', class_='section-link'):
+        if re.match(r'^([0-9]+\.)+\s*$', link.a.string, re.M):
+            continue
         yield link.a.string, 'Guide', link.a['href']
 
 
@@ -105,9 +107,8 @@ if __name__ == '__main__':
     db = sqlite3.connect(os.path.join(doc_dir, '../docSet.dsidx'))
     cur = db.cursor()
 
-    cur.execute('''CREATE TABLE searchIndex(id INTEGER PRIMATY KEY, name TEXT,
+    cur.execute('''CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT,
                 type TEXT, path TEXT);''')
-    cur.execute('CREATE UNIQUE INDEX anchor ON searchIndex (name,type,path);')
 
     for dirpath, dirnames, filenames in os.walk(args.source):
         relpath = os.path.relpath(dirpath, args.source)
@@ -141,8 +142,9 @@ if __name__ == '__main__':
                 if not pos.startswith('#'):
                     pos = '#' + pos
                 pos = os.path.join(relpath, filename) + pos
-                cur.execute('INSERT OR IGNORE INTO searchIndex(name,type,path)'
+                cur.execute('INSERT OR IGNORE INTO searchIndex(name,type,path) '
                             'VALUES (?, ?, ?);', (name, typ, pos))
 
+    cur.execute('CREATE UNIQUE INDEX anchor ON searchIndex (name,type,path);')
     db.commit()
     db.close()
