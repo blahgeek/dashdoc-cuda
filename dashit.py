@@ -4,7 +4,7 @@
 # @Author: blahgeek
 # @Date:   2017-02-13
 # @Last modified by:   blahgeek
-# @Last modified time: 2017-02-13
+# @Last modified time: 2017-10-17
 
 
 import re
@@ -26,6 +26,8 @@ def remove_navbar(soup):
 
 def extract_sectionlink(soup):
     for link in soup.find_all('div', class_='section-link'):
+        if not link.a.string:
+            continue
         if re.match(r'^([0-9]+\.)+\s*$', link.a.string, re.M):
             continue
         yield link.a.string, 'Guide', link.a['href']
