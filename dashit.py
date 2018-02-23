@@ -123,13 +123,15 @@ if __name__ == '__main__':
             indexs = list()
             try:
                 assert filepath.endswith('.html')
-                soup = BeautifulSoup(open(filepath), 'lxml')
-                for index in extract_cppmodule(soup):
-                    indexs.append(index)
-                for index in extract_sectionlink(soup):
-                    indexs.append(index)
-                remove_navbar(soup)
-                open(dstpath, 'w').write(str(soup))
+                with open(filepath, 'rb') as src:
+                    soup = BeautifulSoup(src.read().decode('utf8'), 'lxml')
+                    for index in extract_cppmodule(soup):
+                        indexs.append(index)
+                    for index in extract_sectionlink(soup):
+                        indexs.append(index)
+                    remove_navbar(soup)
+                    with open(dstpath, 'wb') as dst:
+                        dst.write(soup.encode('utf8'))
             except AssertionError:
                 # except:
                 shutil.copy(filepath, dstpath)
