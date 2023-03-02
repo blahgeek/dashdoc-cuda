@@ -1,0 +1,6 @@
+name: dashdoc-cuda
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - beautifulsoup4
