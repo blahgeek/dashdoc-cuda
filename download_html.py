@@ -28,11 +28,14 @@ def download_website(url):
 URLS = [
     "https://docs.nvidia.com/cuda/parallel-thread-execution/index.html",
     "https://docs.nvidia.com/cuda/cublas/index.html",
+    "https://docs.nvidia.com/cuda/cuda-runtime-api/index.html",
+    "https://docs.nvidia.com/cuda/cuda-math-api/index.html",
+    "https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html",
 ]
-BASE_DIR = Path(__file__) / "docs.nvidia.com"
+BASE_DIR = Path(__file__).parent / "docs.nvidia.com"
 
 if __name__ == "__main__":
     for url in URLS:
         name = url.split("/")[-2]
-        if not (BASE_DIR / name).exists():
+        if not (BASE_DIR / "cuda" / name).exists():
             download_website(url)

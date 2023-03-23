@@ -36,12 +36,16 @@ def extract_sectionlink(soup):
         yield link.a.string, "Guide", link.a["href"]
 
 
-def extract_module(soup, module_name):
-    print("Extracting module: {}".format(module_name))
-    navigation_menu = soup.find("div", role="navigation")
+def extract_modern_module(soup, module_name):
+    navigation_menu = soup.find(
+        "div", role="navigation", class_="wy-menu wy-menu-vertical"
+    )
+    if not navigation_menu:
+        return
+
     for link in navigation_menu.find_all("a", class_="reference internal"):
         # remove the leading numbering (like 1. or 2.2.1)
-        desc = re.sub(r"^(\d+\.)+", "", link.string).strip()
+        desc = re.sub(r"^(\d+\.)+", "", " ".join(link.strings)).strip()
         if desc.endswith("()"):
             desc = desc[:-2]
             link_type = "Function"
@@ -151,11 +155,17 @@ if __name__ == "__main__":
 
             indexs = list()
             try:
-                assert filepath.endswith("index.html")
+                assert filepath.endswith(".html")
                 with open(filepath, "rb") as src:
                     soup = BeautifulSoup(src.read().decode("utf8"), "lxml")
-                    for index in extract_module(soup, filepath.split("/")[-2]):
-                        indexs.append(index)
+                    if filepath.endswith("index.html"):
+                        for index in extract_modern_module(
+                            soup, filepath.split("/")[-2]
+                        ):
+                            indexs.append(index)
+                    else:
+                        for index in extract_cppmodule(soup):
+                            indexs.append(index)
                     remove_navbar(soup)
                     with open(dstpath, "wb") as dst:
                         dst.write(soup.encode("utf8"))
@@ -164,15 +174,16 @@ if __name__ == "__main__":
                 shutil.copy(filepath, dstpath)
 
             for name, typ, pos in indexs:
+                # print(name, typ, pos)
                 name = re.sub("\s+", " ", name)
-                pos = re.sub("index.html", "", pos)
+                pos = re.sub(filename, "", pos)
                 assert "\n" not in name
                 if "#" in pos[1:] or "/" in pos:
                     continue
                 if not pos.startswith("#"):
                     pos = "#" + pos
                 pos = os.path.join(relpath, filename) + pos
-                print(name, typ, pos)
+                # print(name, typ, pos)
                 cur.execute(
                     "INSERT OR IGNORE INTO searchIndex(name,type,path) "
                     "VALUES (?, ?, ?);",
