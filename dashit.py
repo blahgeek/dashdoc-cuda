@@ -36,6 +36,14 @@ def extract_sectionlink(soup):
         yield link.a.string, "Guide", link.a["href"]
 
 
+def extract_module(soup):
+    for link in soup.find_all("section"):
+        if link.h3 and not link.h2 and not link.h1:
+            if not link.h3.a.string.startswith("ï\x83\x81"):
+                permalink = link.h3.find("a", class_="headerlink")
+                yield link.h3.a.string, "Function", permalink["href"]
+
+
 def extract_cppmodule(soup):
     module = soup.find("div", class_="cppModule")
     if not module:
@@ -104,7 +112,10 @@ def make_docset_layout(path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="CUDA Docset generator")
     parser.add_argument(
-        "-s", "--source", help="Source HTML doc folder", default="/opt/cuda/doc/html/"
+        "-s",
+        "--source",
+        help="Source HTML doc folder",
+        default="docs.nvidia.com",
     )
     parser.add_argument(
         "-d", "--dest", help="Destination .docset folder", default="./CUDA.docset"
@@ -135,6 +146,8 @@ if __name__ == "__main__":
                 assert filepath.endswith(".html")
                 with open(filepath, "rb") as src:
                     soup = BeautifulSoup(src.read().decode("utf8"), "lxml")
+                    for index in extract_module(soup):
+                        indexs.append(index)
                     for index in extract_cppmodule(soup):
                         indexs.append(index)
                     for index in extract_sectionlink(soup):
@@ -148,14 +161,14 @@ if __name__ == "__main__":
 
             for name, typ, pos in indexs:
                 name = re.sub("\s+", " ", name)
+                pos = re.sub("index.html", "", pos)
                 assert "\n" not in name
                 if "#" in pos[1:] or "/" in pos:
                     continue
-                # print(name, typ, pos)
-                # assert('#' not in pos[1:])
                 if not pos.startswith("#"):
                     pos = "#" + pos
                 pos = os.path.join(relpath, filename) + pos
+                print(name, typ, pos)
                 cur.execute(
                     "INSERT OR IGNORE INTO searchIndex(name,type,path) "
                     "VALUES (?, ?, ?);",

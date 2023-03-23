@@ -4,3 +4,5 @@ channels:
 dependencies:
   - python
   - beautifulsoup4
+  - requests
+  - lxml
