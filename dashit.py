@@ -4,7 +4,7 @@
 # @Author: blahgeek
 # @Date:   2017-02-13
 # @Last modified by:   siboehm
-# @Last modified time: 2023-03-01
+# @Last modified time: 2023-03-23
 
 
 import re
@@ -36,12 +36,20 @@ def extract_sectionlink(soup):
         yield link.a.string, "Guide", link.a["href"]
 
 
-def extract_module(soup):
-    for link in soup.find_all("section"):
-        if link.h3 and not link.h2 and not link.h1:
-            if not link.h3.a.string.startswith("ï\x83\x81"):
-                permalink = link.h3.find("a", class_="headerlink")
-                yield link.h3.a.string, "Function", permalink["href"]
+def extract_module(soup, module_name):
+    print("Extracting module: {}".format(module_name))
+    navigation_menu = soup.find("div", role="navigation")
+    for link in navigation_menu.find_all("a", class_="reference internal"):
+        # remove the leading numbering (like 1. or 2.2.1)
+        desc = re.sub(r"^(\d+\.)+", "", link.string).strip()
+        if desc.endswith("()"):
+            desc = desc[:-2]
+            link_type = "Function"
+        elif desc.endswith("_t"):
+            link_type = "Type"
+        else:
+            link_type = "Guide"
+        yield desc, link_type, link["href"]
 
 
 def extract_cppmodule(soup):
@@ -143,14 +151,10 @@ if __name__ == "__main__":
 
             indexs = list()
             try:
-                assert filepath.endswith(".html")
+                assert filepath.endswith("index.html")
                 with open(filepath, "rb") as src:
                     soup = BeautifulSoup(src.read().decode("utf8"), "lxml")
-                    for index in extract_module(soup):
-                        indexs.append(index)
-                    for index in extract_cppmodule(soup):
-                        indexs.append(index)
-                    for index in extract_sectionlink(soup):
+                    for index in extract_module(soup, filepath.split("/")[-2]):
                         indexs.append(index)
                     remove_navbar(soup)
                     with open(dstpath, "wb") as dst:
