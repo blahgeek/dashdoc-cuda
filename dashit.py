@@ -26,6 +26,29 @@ def remove_navbar(soup):
         except AttributeError:
             pass
 
+    try:
+        soup.find("nav", class_="wy-nav-side").extract()
+    except AttributeError:
+        pass
+
+    nav = soup.find("section", class_="wy-nav-content-wrap")
+    if nav is not None:
+        # Add a custom class to the 'wy-nav-side' element
+        nav["class"].append("hide-navbar")
+
+        # Add a style tag to the head of the document with the custom CSS
+        style_tag = soup.new_tag("style")
+        style_tag.string = """
+        .hide-navbar {
+            margin-left: 0 !important;
+        }
+
+        .wy-nav-content-wrap {
+            margin-left: 0 !important;
+        }
+        """
+        soup.head.append(style_tag)
+
 
 def extract_sectionlink(soup):
     for link in soup.find_all("div", class_="section-link"):
