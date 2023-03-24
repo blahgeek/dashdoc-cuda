@@ -76,6 +76,18 @@ def extract_modern_module(soup, module_name):
             link_type = "Type"
         else:
             link_type = "Guide"
+        # get member pointed to by relative link
+        if len(link["href"].split("#")) == 2:
+            rel_link = link["href"].split("#")[1]
+            member = soup.find(id=rel_link)
+            # insert dash tag after link: <a name="//apple_ref/cpp/Entry Type/Entry Name" class="dashAnchor"></a>
+            dash_tag = soup.new_tag("a")
+            dash_tag["name"] = (
+                "//apple_ref/cpp/" + link_type + "/" + " ".join(link.strings)
+            )
+            dash_tag["class"] = "dashAnchor"
+            if member:
+                member.insert_before(dash_tag)
         yield desc, link_type, link["href"]
 
 
@@ -138,6 +150,8 @@ def make_docset_layout(path):
     <false/>
     <key>dashIndexFilePath</key>
     <string>index.html</string>
+    <key>DashDocSetFamily</key>
+    <string>dashtoc</string>
 </dict>
 </plist>"""
         )
